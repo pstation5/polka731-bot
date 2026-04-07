@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = '8215345661:AAFNelV3FwgqW68EDKVRQWUhvvYAr2r7Ucw';
+const TOKEN = process.env.BOT_TOKEN;
 const CATALOG_URL = 'https://t.me/pstation5bot';
 
 const bot = new TelegramBot(TOKEN, { polling: true });
