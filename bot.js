@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = process.env.BOT_TOKEN;
+const TOKEN = '8215345661:AAG7N79pq1_O4f7QcOovJUBdy7BiU-96xC4';
 const CHANNEL = process.env.CHANNEL_ID; // @room731
 const CATALOG_URL = 'https://t.me/pstation5bot';
 
