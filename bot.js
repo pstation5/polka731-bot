@@ -1,41 +1,47 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = process.env.BOT_TOKEN;
-const CHANNEL = process.env.CHANNEL_ID; // @room731
+const TOKEN = '8215345661:AAFNelV3FwgqW68EDKVRQWUhvvYAr2r7Ucw';
 const CATALOG_URL = 'https://t.me/pstation5bot';
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 console.log('Бот запущен...');
 
-// Когда в канале появляется новый пост — добавляем кнопку
-bot.on('channel_post', async (msg) => {
-  // Игнорируем если пост уже с кнопкой или это служебное сообщение
-  if (!msg.text && !msg.caption && !msg.photo && !msg.video) return;
-  if (msg.reply_markup) return;
+// Отслеживаем уже обработанные media_group чтобы не дублировать
+const processedGroups = new Set();
 
+const addButton = async (chatId, messageId) => {
   try {
     await bot.editMessageReplyMarkup(
       {
         inline_keyboard: [[
-          {
-            text: '🎮 Открыть каталог',
-            url: CATALOG_URL
-          }
+          { text: '🎮 Открыть каталог', url: CATALOG_URL }
         ]]
       },
-      {
-        chat_id: msg.chat.id,
-        message_id: msg.message_id
-      }
+      { chat_id: chatId, message_id: messageId }
     );
-    console.log(`Кнопка добавлена к посту ${msg.message_id}`);
+    console.log(`Кнопка добавлена к посту ${messageId}`);
   } catch (err) {
-    console.error('Ошибка:', err.message);
+    if (!err.message.includes('message is not modified')) {
+      console.error('Ошибка:', err.message);
+    }
   }
+};
+
+bot.on('channel_post', async (msg) => {
+  // Для альбомов (media_group) — добавляем кнопку только к первому сообщению группы
+  if (msg.media_group_id) {
+    if (processedGroups.has(msg.media_group_id)) return;
+    processedGroups.add(msg.media_group_id);
+    // Небольшая задержка чтобы Telegram успел обработать весь альбом
+    setTimeout(() => addButton(msg.chat.id, msg.message_id), 1500);
+    return;
+  }
+
+  // Одиночные сообщения
+  await addButton(msg.chat.id, msg.message_id);
 });
 
-// Обработка ошибок
 bot.on('polling_error', (err) => {
   console.error('Polling error:', err.message);
 });
